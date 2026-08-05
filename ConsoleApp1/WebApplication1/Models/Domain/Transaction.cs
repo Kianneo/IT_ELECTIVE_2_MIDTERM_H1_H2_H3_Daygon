@@ -2,10 +2,12 @@
 
 public class Transaction
 {
-    public Guid TransactionId { get; set; } = Guid.NewGuid();
-    public DateTime Date { get; set; } = DateTime.Now;
+    public string TransactionId { get; set; } = string.Empty;
+    public DateTime Date { get; set; }
     public string CustomerName { get; set; } = string.Empty;
     public string? CustomerEmail { get; set; }
     public decimal TotalAmount { get; set; }
+    public decimal AmountTendered { get; set; }
+    public decimal ChangeDue { get; set; }
     public List<CartItem> PurchasedItems { get; set; } = new();
 }

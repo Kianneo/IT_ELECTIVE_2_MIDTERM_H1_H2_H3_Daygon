@@ -3,5 +3,5 @@
 public class ShoppingCart
 {
     public List<CartItem> Items { get; set; } = new();
-    public decimal GrandTotal => Items.Sum(i => i.LineTotal);
+    public decimal GrandTotal => Items.Sum(item => item.SubTotal);
 }

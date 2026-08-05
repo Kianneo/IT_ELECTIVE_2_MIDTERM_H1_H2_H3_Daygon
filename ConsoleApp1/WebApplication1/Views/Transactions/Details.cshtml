@@ -1,0 +1,67 @@
+﻿@model WebApplication1.Models.Domain.Transaction
+@{
+    ViewData["Title"] = "Transaction Details";
+}
+
+<div class="container py-5" style="max-width: 650px;">
+    <div class="card border-secondary text-white shadow-lg" style="background-color: #111827; border-radius: 12px;">
+        <div class="card-header border-secondary bg-transparent d-flex justify-content-between align-items-center py-3">
+            <h4 class="fw-bold text-info mb-0">Receipt #@Model.TransactionId</h4>
+            <span class="text-secondary small">@Model.Date.ToString("g")</span>
+        </div>
+
+        <div class="card-body p-4">
+            <div class="mb-4">
+                <h6 class="text-secondary mb-1">Customer Information</h6>
+                <h5 class="fw-bold mb-0">@Model.CustomerName</h5>
+                @if (!string.IsNullOrEmpty(Model.CustomerEmail))
+                {
+                    <small class="text-muted">@Model.CustomerEmail</small>
+                }
+            </div>
+
+            <h6 class="text-secondary mb-2">Purchased Items</h6>
+            <div class="table-responsive mb-4">
+                <table class="table table-dark table-hover align-middle mb-0">
+                    <thead>
+                        <tr class="text-secondary small border-bottom border-secondary">
+                            <th>Item</th>
+                            <th class="text-center">Qty</th>
+                            <th class="text-end">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.PurchasedItems)
+                        {
+                            <tr class="border-bottom border-secondary">
+                                <td class="fw-medium">@item.ProductName</td>
+                                <td class="text-center text-info">@("x" + item.Quantity)</td>
+                                <td class="text-end fw-bold">$@item.SubTotal.ToString("F2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="bg-dark p-3 rounded border border-secondary mb-4">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-secondary">Grand Total:</span>
+                    <span class="fw-bold text-white">$@Model.TotalAmount.ToString("F2")</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-secondary">Amount Tendered:</span>
+                    <span class="fw-bold text-white">$@Model.AmountTendered.ToString("F2")</span>
+                </div>
+                <hr class="border-secondary my-2" />
+                <div class="d-flex justify-content-between fs-5">
+                    <span class="fw-semibold text-success">Change Due:</span>
+                    <span class="fw-bold text-success">$@Model.ChangeDue.ToString("F2")</span>
+                </div>
+            </div>
+
+            <a asp-controller="Transactions" asp-action="Index" class="btn btn-outline-light w-100 fw-bold py-2">
+                &larr; Back to Transactions
+            </a>
+        </div>
+    </div>
+</div>

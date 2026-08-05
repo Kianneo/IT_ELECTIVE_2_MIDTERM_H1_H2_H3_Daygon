@@ -1,0 +1,57 @@
+﻿@model List<WebApplication1.Models.Domain.Transaction>
+@{
+    ViewData["Title"] = "Transaction History";
+}
+
+<div class="container-fluid py-4 px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary">
+        <div>
+            <h2 class="fw-bold text-white mb-1">📜 Transaction History</h2>
+            <p class="text-secondary small mb-0">Review all completed sales and customer receipts</p>
+        </div>
+        <a asp-controller="Cart" asp-action="Index" class="btn btn-cyan px-3 py-2 fw-semibold">
+            &larr; Back to POS
+        </a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="card border-secondary text-white p-5 text-center" style="background-color: #111827;">
+            <p class="text-muted mb-0">No recorded transactions yet. Complete an order to view history.</p>
+        </div>
+    }
+    else
+    {
+        <div class="card border-secondary text-white shadow" style="background-color: #111827; border-radius: 12px;">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover mb-0 align-middle">
+                    <thead>
+                        <tr class="text-secondary small border-bottom border-secondary">
+                            <th class="ps-4 py-3">Transaction ID</th>
+                            <th class="py-3">Date &amp; Time</th>
+                            <th class="py-3">Customer Name</th>
+                            <th class="text-end py-3">Total Amount</th>
+                            <th class="text-center pe-4 py-3">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr class="border-bottom border-secondary">
+                                <td class="ps-4 fw-bold text-info">#@item.TransactionId</td>
+                                <td class="text-secondary">@item.Date.ToString("g")</td>
+                                <td class="fw-medium">@item.CustomerName</td>
+                                <td class="text-end fw-bold text-success">$@item.TotalAmount.ToString("F2")</td>
+                                <td class="text-center pe-4">
+                                    <a asp-controller="Transactions" asp-action="Details" asp-route-id="@item.TransactionId" class="btn btn-sm btn-outline-info">
+                                        View Details
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

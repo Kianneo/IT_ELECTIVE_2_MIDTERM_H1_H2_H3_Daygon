@@ -1,45 +1,36 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using WebApplication1.Data;
-using WebApplication1.Models.Domain;
 using WebApplication1.Models.DTOs;
 
 namespace WebApplication1.Controllers;
 
 public class CartController : Controller
 {
-    // US-01: View Catalog & Active Cart
+    // GET: /Cart
     public IActionResult Index()
     {
-        ViewBag.Products = StaticDataStore.Products;
-        return View(StaticDataStore.ActiveCart);
+        var cart = StaticDataStore.ActiveCart;
+        return View(cart);
     }
 
-    // US-02: Add Product to Cart
+    // POST: /Cart/AddToCart
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public IActionResult AddToCart(AddToCartDTO dto)
     {
         if (!ModelState.IsValid)
         {
-            TempData["Error"] = "Invalid request details.";
             return RedirectToAction(nameof(Index));
         }
 
         var product = StaticDataStore.Products.FirstOrDefault(p => p.Id == dto.ProductId);
-        if (product == null)
+        if (product == null || product.StockQuantity < dto.Quantity)
         {
-            TempData["Error"] = "Product not found.";
+            TempData["Error"] = "Selected quantity exceeds available stock.";
             return RedirectToAction(nameof(Index));
         }
 
-        var existingItem = StaticDataStore.ActiveCart.Items.FirstOrDefault(i => i.ProductId == dto.ProductId);
-        int currentCartQty = existingItem?.Quantity ?? 0;
-
-        if (currentCartQty + dto.Quantity > product.StockQuantity)
-        {
-            TempData["Error"] = $"Cannot add item. Requested quantity exceeds available stock ({product.StockQuantity}).";
-            return RedirectToAction(nameof(Index));
-        }
+        var cart = StaticDataStore.ActiveCart;
+        var existingItem = cart.Items.FirstOrDefault(i => i.ProductId == dto.ProductId);
 
         if (existingItem != null)
         {
@@ -47,7 +38,7 @@ public class CartController : Controller
         }
         else
         {
-            StaticDataStore.ActiveCart.Items.Add(new CartItem
+            cart.Items.Add(new Models.Domain.CartItem
             {
                 ProductId = product.Id,
                 ProductName = product.Name,
@@ -56,51 +47,45 @@ public class CartController : Controller
             });
         }
 
-        TempData["Success"] = $"{product.Name} added to cart.";
         return RedirectToAction(nameof(Index));
     }
 
-    // US-03: Update Quantity in Cart
+    // POST: /Cart/UpdateQuantity
     [HttpPost]
-    [ValidateAntiForgeryToken]
     public IActionResult UpdateQuantity(UpdateCartDTO dto)
     {
-        if (!ModelState.IsValid)
+        var cart = StaticDataStore.ActiveCart;
+        var item = cart.Items.FirstOrDefault(i => i.ProductId == dto.ProductId);
+
+        if (item != null)
         {
-            TempData["Error"] = "Invalid quantity specified.";
-            return RedirectToAction(nameof(Index));
+            if (dto.Quantity <= 0)
+            {
+                cart.Items.Remove(item);
+            }
+            else
+            {
+                var product = StaticDataStore.Products.FirstOrDefault(p => p.Id == dto.ProductId);
+                if (product != null && dto.Quantity <= product.StockQuantity)
+                {
+                    item.Quantity = dto.Quantity;
+                }
+            }
         }
 
-        var existingItem = StaticDataStore.ActiveCart.Items.FirstOrDefault(i => i.ProductId == dto.ProductId);
-        var product = StaticDataStore.Products.FirstOrDefault(p => p.Id == dto.ProductId);
-
-        if (existingItem == null || product == null)
-        {
-            TempData["Error"] = "Item not found in cart.";
-            return RedirectToAction(nameof(Index));
-        }
-
-        if (dto.Quantity > product.StockQuantity)
-        {
-            TempData["Error"] = $"Cannot update quantity. Only {product.StockQuantity} available in stock.";
-            return RedirectToAction(nameof(Index));
-        }
-
-        existingItem.Quantity = dto.Quantity;
-        TempData["Success"] = "Cart updated successfully.";
         return RedirectToAction(nameof(Index));
     }
 
-    // US-04: Remove Item from Cart
+    // POST: /Cart/RemoveFromCart
     [HttpPost]
-    [ValidateAntiForgeryToken]
-    public IActionResult RemoveItem(int productId)
+    public IActionResult RemoveFromCart(int productId)
     {
-        var itemToRemove = StaticDataStore.ActiveCart.Items.FirstOrDefault(i => i.ProductId == productId);
-        if (itemToRemove != null)
+        var cart = StaticDataStore.ActiveCart;
+        var item = cart.Items.FirstOrDefault(i => i.ProductId == productId);
+
+        if (item != null)
         {
-            StaticDataStore.ActiveCart.Items.Remove(itemToRemove);
-            TempData["Success"] = $"{itemToRemove.ProductName} removed from cart.";
+            cart.Items.Remove(item);
         }
 
         return RedirectToAction(nameof(Index));
