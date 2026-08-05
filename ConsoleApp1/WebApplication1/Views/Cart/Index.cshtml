@@ -1,0 +1,250 @@
+﻿@model WebApplication1.Models.Domain.ShoppingCart
+@{
+    ViewData["Title"] = "Artisanal Bakery POS";
+    var products = ViewBag.Products as List<WebApplication1.Models.Domain.Product> ?? new List<WebApplication1.Models.Domain.Product>();
+}
+
+<style>
+    /* Full Page Dark Mode & Navbar Override */
+    body {
+        background: linear-gradient(135deg, #0f172a 0%, #020617 100%) !important;
+        min-height: 100vh;
+        color: #f8fafc;
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    /* Container Glassmorphism Cards */
+    .pos-card {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        background: rgba(30, 41, 59, 0.6);
+        backdrop-filter: blur(12px);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .product-card:hover {
+        transform: translateY(-3px);
+        border-color: #38bdf8;
+        box-shadow: 0 10px 25px rgba(56, 189, 248, 0.15);
+        background: rgba(30, 41, 59, 0.85);
+    }
+
+    /* Price & Badges */
+    .price-tag {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #38bdf8;
+    }
+
+    .badge-stock {
+        font-size: 0.75rem;
+        padding: 0.35em 0.75em;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+
+    /* Modern Dark Quantity Input */
+    .form-control-dark {
+        background-color: #0f172a !important;
+        border: 1px solid #334155 !important;
+        color: #38bdf8 !important;
+        font-weight: 600;
+        border-radius: 8px !important;
+    }
+
+        .form-control-dark:focus {
+            border-color: #38bdf8 !important;
+            box-shadow: 0 0 0 0.2rem rgba(56, 189, 248, 0.2) !important;
+        }
+
+    /* Side-by-Side Button Styling */
+    .btn-action-primary {
+        background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+        border: none;
+        color: #ffffff;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+        .btn-action-primary:hover {
+            background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+            color: #ffffff;
+        }
+
+    /* Cart Drawer/Summary Panel */
+    .cart-summary-card {
+        background: rgba(30, 41, 59, 0.8);
+        border: 1px solid rgba(56, 189, 248, 0.2);
+        border-radius: 14px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        position: sticky;
+        top: 20px;
+        backdrop-filter: blur(12px);
+    }
+
+    .total-box {
+        background: #0f172a;
+        border: 1px solid #334155;
+        border-radius: 10px;
+    }
+</style>
+
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 p-3 pos-card">
+        <div>
+            <h3 class="fw-bold text-white m-0">🥖 Artisanal Bakery POS</h3>
+            <p class="small m-0" style="color: #94a3b8;">Select products to build an order and proceed to checkout</p>
+        </div>
+        <span class="badge bg-info text-dark px-3 py-2 fs-6 rounded-pill fw-semibold" style="box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);">Active Session</span>
+    </div>
+
+    <!-- Alert Messages -->
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row g-4">
+        <!-- Left: Product Catalog Grid -->
+        <div class="col-lg-7">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-white m-0">Product Catalog</h5>
+                <span class="badge border text-slate-300" style="background: #1e293b; border-color: #334155; color: #94a3b8;">
+                    @products.Count Items Available
+                </span>
+            </div>
+
+            <div class="row row-cols-1 row-cols-md-2 g-3">
+                @foreach (var product in products)
+                {
+                    <div class="col">
+                        <div class="card pos-card product-card h-100 p-2">
+                            <div class="card-body d-flex flex-column justify-content-between p-3">
+                                <div>
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="fw-bold mb-0 text-white">@product.Name</h6>
+                                        @if (product.StockQuantity > 5)
+                                        {
+                                            <span class="badge badge-stock" style="background: #022c22; color: #34d399; border: 1px solid #065f46;">In Stock (@product.StockQuantity)</span>
+                                        }
+                                        else if (product.StockQuantity > 0)
+                                        {
+                                            <span class="badge badge-stock" style="background: #451a03; color: #fbbf24; border: 1px solid #92400e;">Low Stock (@product.StockQuantity)</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-stock" style="background: #4c0519; color: #fb7185; border: 1px solid #9f1239;">Out of Stock</span>
+                                        }
+                                    </div>
+                                    <div class="price-tag mb-3">$@product.Price.ToString("F2")</div>
+                                </div>
+
+                                @if (product.StockQuantity > 0)
+                                {
+                                    <form asp-action="AddToCart" method="post" class="mt-auto">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="ProductId" value="@product.Id" />
+                                        <div class="d-flex gap-2">
+                                            <input type="number" name="Quantity" value="1" min="1" max="@product.StockQuantity" class="form-control form-control-sm text-center form-control-dark" style="width: 65px;" />
+                                            <button type="submit" class="btn btn-action-primary btn-sm flex-grow-1">
+                                                + Add to Cart
+                                            </button>
+                                        </div>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-dark btn-sm w-100 mt-auto" style="color: #64748b; background: #0f172a; border: 1px solid #334155;" disabled>Unavailable</button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Right: Current Order Summary -->
+        <div class="col-lg-5">
+            <div class="cart-summary-card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-white m-0">Current Order</h5>
+                    <span class="badge bg-info text-dark rounded-pill fw-bold">@Model.Items.Sum(i => i.Quantity) items</span>
+                </div>
+                <hr style="border-color: #334155;" class="mt-2 mb-3" />
+
+                @if (!Model.Items.Any())
+                {
+                    <div class="text-center py-5">
+                        <div class="fs-1 mb-2" style="color: #475569;">🛒</div>
+                        <h6 class="fw-bold" style="color: #94a3b8;">Your cart is empty</h6>
+                        <p class="small m-0" style="color: #64748b;">Click "+ Add to Cart" on any product to begin.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive" style="max-height: 320px; overflow-y: auto;">
+                        <table class="table table-borderless align-middle mb-0">
+                            <thead>
+                                <tr class="small border-bottom" style="border-color: #334155 !important; color: #94a3b8;">
+                                    <th>Item</th>
+                                    <th class="text-center">Qty</th>
+                                    <th class="text-end">Total</th>
+                                    <th class="text-end"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.Items)
+                                {
+                                    <tr class="border-bottom" style="border-color: #334155 !important;">
+                                        <td class="fw-semibold text-white">@item.ProductName</td>
+                                        <td style="width: 75px;">
+                                            <form asp-action="UpdateQuantity" method="post">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="ProductId" value="@item.ProductId" />
+                                                <input type="number" name="Quantity" value="@item.Quantity" min="1" class="form-control form-control-sm text-center form-control-dark p-1" onchange="this.form.submit()" />
+                                            </form>
+                                        </td>
+                                        <td class="text-end fw-bold text-white">$@item.LineTotal.ToString("F2")</td>
+                                        <td class="text-end" style="width: 30px;">
+                                            <form asp-action="RemoveItem" method="post">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="productId" value="@item.ProductId" />
+                                                <button type="submit" class="btn btn-link p-0 border-0 text-decoration-none fs-5" style="color: #f43f5e;">&times;</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="total-box p-3 mt-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-semibold" style="color: #94a3b8;">Grand Total</span>
+                            <span class="fs-3 fw-bold" style="color: #4ade80;">$@Model.GrandTotal.ToString("F2")</span>
+                        </div>
+                    </div>
+
+                    <a asp-controller="Checkout" asp-action="Index" class="btn btn-success btn-lg w-100 fw-bold py-2" style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); border: none;">
+                        Proceed to Checkout →
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+</div>
